@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Blog</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>View Blog</h1>
+<div id="blogDetail"></div>
+</body>
+<script>
+    const id = new URLSearchParams(window.location.search).get("id");
+
+    $.get(`http://localhost:8080/api/v1/blogs/view/${id}`, function (data) {
+        const content = `
+            <p><strong>ID:</strong> ${data.id}</p>
+            <p><strong>Title:</strong> ${data.title}</p>
+            <p><strong>Author:</strong> ${data.author}</p>
+            <p><strong>Content:</strong> ${data.content}</p>
+            <p><strong>Category:</strong> ${data.category.name}</p>
+            <p><strong>Created Date:</strong> ${new Date(data.createdAt).toLocaleDateString()}</p>
+        `;
+        $("#blogDetail").html(content);
+    });
+</script>
+</html>

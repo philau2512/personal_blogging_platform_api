@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>List Blogs</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>List Blogs</h1>
+<button onclick="window.location.href = 'create.html'">Create New Blog</button>
+<table style="border-collapse: collapse" border="1">
+    <tr>
+        <th>STT</th>
+        <th>Title</th>
+        <th>Excerpt</th>
+        <th>Category</th>
+        <th>Created Date</th>
+        <th>Action</th>
+    </tr>
+    <tbody id="content"></tbody>
+</table>
+<button id="btn-more" onclick="displayMore()">View More</button>
+</body>
+<script>
+    display();
+
+    let page = 0;
+    let totalPages = 0;
+
+    function displayMore() {
+        page++;
+        display(page)
+    }
+
+    function display(page = 0) {
+        $.ajax({
+            dataType: "json",
+            url: `http://localhost:8080/api/v1/blogs?page=${page}`,
+            type: 'get',
+            success: function (data, res) {
+                // console.log(data);
+                let content = "";
+
+                for (let i = 0; i < data.content.length; i++) {
+                    const blog = data.content[i];
+                    let serial = page * data.size + i + 1; // STT
+
+                    content += `<tr>
+                    <td>${serial}</td>
+                    <td>${blog.title}</td>
+                    <td>${blog.excerpt}</td>
+                    <td>${blog.category.name}</td>
+                    <td>${new Date(blog.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="viewBlog(${blog.id})">View</button>
+                        <button onclick="editBlog(${blog.id})">Edit</button>
+                        <button onclick="deleteBlog(${blog.id})">Delete</button>
+                    </td>
+                </tr>`;
+                }
+                if (page === 0) {
+                    $("#content").html(content);
+                } else {
+                    $("#content").append(content);
+                }
+                totalPages = data.totalPages;
+                if (page >= totalPages - 1) {
+                    $("#btn-more").hide();
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        })
+    }
+
+    function viewBlog(id) {
+        window.location.href = `view.html?id=${id}`;
+    }
+
+    function editBlog(id) {
+        window.location.href = `edit.html?id=${id}`;
+    }
+
+    function deleteBlog(id) {
+        if (confirm("Are you sure you want to delete this blog?")) {
+            $.ajax({
+                url: `http://localhost:8080/api/v1/blogs/delete/${id}`,
+                type: "DELETE",
+                success: function () {
+                    alert("Deleted successfully!");
+                    getAllBlogs();
+                },
+                error: function () {
+                    alert("Failed to delete blog!");
+                }
+            });
+        }
+    }
+</script>
+</html>

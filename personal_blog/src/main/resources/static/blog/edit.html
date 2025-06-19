@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Blog</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Edit Blog</h1>
+<form id="editForm">
+    <input type="hidden" id="id">
+    Title: <input type="text" id="title"><br>
+    Author: <input type="text" id="author"><br>
+    Content: <textarea id="content"></textarea><br>
+    Category:
+    <select id="categoryId"></select><br>
+    <button type="submit">Update</button>
+</form>
+</body>
+
+<script>
+    const id = new URLSearchParams(window.location.search).get("id");
+    let currentCategoryId = null;
+
+    $(document).ready(function () {
+        getBlogInfo();
+        getListCategories();
+    });
+
+    function getBlogInfo() {
+        $.ajax({
+            dataType: "json",
+            url: `http://localhost:8080/api/v1/blogs/view/${id}`,
+            type: "GET",
+            success: function (data) {
+                $("#id").val(data.id);
+                $("#title").val(data.title);
+                $("#author").val(data.author);
+                $("#content").val(data.content);
+                currentCategoryId = data.category.id;
+            },
+            error: function (error) {
+                console.error("Error loading blog:", error);
+                $("#editForm").html("<p>Error loading blog</p>");
+            }
+        });
+    }
+
+    function getListCategories() {
+        $.ajax({
+            dataType: "json",
+            url: "http://localhost:8080/api/v1/categories",
+            type: "GET",
+            success: function (data) {
+                let html = "";
+                for (let i = 0; i < data.length; i++) {
+                    html += `<option value="${data[i].id}">${data[i].name}</option>`;
+                }
+                $("#categoryId").html(html);
+
+                // Set selected category sau khi load
+                if (currentCategoryId) {
+                    $("#categoryId").val(currentCategoryId);
+                } else {
+                    // Nếu chưa có category thì delay nhẹ
+                    setTimeout(() => {
+                        $("#categoryId").val(currentCategoryId);
+                    }, 100);
+                }
+            },
+            error: function (error) {
+                console.error("Error loading categories:", error);
+            }
+        });
+    }
+
+    $("#editForm").submit(function (e) {
+        e.preventDefault();
+        const blog = {
+            id: $("#id").val(),
+            title: $("#title").val(),
+            author: $("#author").val(),
+            content: $("#content").val(),
+            categoryId: $("#categoryId").val()
+        };
+
+        $.ajax({
+            url: `http://localhost:8080/api/v1/blogs/update/${blog.id}`,
+            type: "PATCH",
+            contentType: "application/json",
+            data: JSON.stringify(blog),
+            success: function () {
+                alert("Blog updated successfully!");
+                window.location.href = "list.html";
+            },
+            error: function (xhr) {
+                console.error(xhr);
+                alert("Update failed!");
+            }
+        });
+    });
+</script>
+</html>
